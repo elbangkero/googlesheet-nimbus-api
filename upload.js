@@ -2,33 +2,38 @@ const axios = require('axios');
 const https = require('https');
 const Helper = require('./class-helper');
 const HelperClass = new Helper();
+const vitruvian = require('./vitruvian-api');
+const _vitruvian = new vitruvian();
 
 uploadToNimbus = async (_req, _res) => {
-
-    console.log(_req.body);
-
+    const playerclassification = await _vitruvian.vitruvianRequest(_req.body.playerToken);
+    const userid = await HelperClass.parseUserID(_req.body.agent);
+    const categories = await HelperClass.parseCategories(_req.body.issue, _req.body.currency, _req.body.channel);
     let data = JSON.stringify({
-        "categories": "450,136,157",
-        "userid": "3",
-        "description": `<p>${_req.body.forCMT}</p>`, //Nimbus Description
-        "priority": HelperClass.parsePriority(_req.body.priority),
-        "status": "35",
-        "market": HelperClass.parseMarket(_req.body.market),
-        "playertoken": _req.body.playerToken,
-        "subject": "undefined",
-        "cat_group_id": "7",
-        "assignee": "4",
-        "watchers": "group_2",
-        "brand": HelperClass.parseBrand(_req.body.brand),
-        "due_date": null,
-        "playerclassification": "test account",
-        "department_id": "1",
-        "email": null,
-        "internal_note": null,
-        "userid_to_tag": _req.body.playerToken,
-        "payment_method": null,
-        "cashier_id": null
+        "categories": `${categories}`, // done
+        "userid": userid.id, // done
+        "description": `<p>${_req.body.forCMT}</p>`,  // done
+        "priority": await HelperClass.parsePriority(_req.body.agent, _req.body.priority),  // done
+        "status": await HelperClass.parseDepartmentStatus(_req.body.issue), // done
+        "market": HelperClass.parseMarket(_req.body.market),  // done
+        "playertoken": _req.body.playerToken,  // done
+        "subject": "undefined", // done
+        "cat_group_id": HelperClass.parseCatGroupID(_req.body.issue), // done
+        "assignee": await HelperClass.parseAssignee(_req.body.assignee), // done
+        "watchers": null, // done
+        "brand": HelperClass.parseBrand(_req.body.brand),  // done
+        "due_date": null, // done
+        "playerclassification": playerclassification, // done
+        "department_id": userid.department_id, // done
+        "email": null, // done
+        "internal_note": null, // done
+        "userid_to_tag": _req.body.playerToken, // done
+        "payment_method": null, // done
+        "cashier_id": null // done
     });
+
+    console.log(data);
+
 
     let config = {
         method: 'post',
@@ -59,7 +64,6 @@ uploadToNimbus = async (_req, _res) => {
             console.log({ 'statusCode': 400, 'status': true, message: 'Error Request', 'callback': resData });
             _res.status(200).json({ 'statusCode': 200, 'status': true, message: 'Error Request', 'callback': resData });
         });
-
 
 }
 
