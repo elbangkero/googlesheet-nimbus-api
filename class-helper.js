@@ -5,11 +5,26 @@ async function parsePriority(agent, priority) {
 
     const department_id = await parseUserID(agent);
 
+    const errorAgent = {
+        webStatus: 'Error',
+        message: 'Error on Agent cell',
+        columnName: 'agent'
+    }
+
+    const errorPriority = {
+        webStatus: 'Error',
+        message: 'Error on Priority cell',
+        columnName: 'priority'
+    }
+    if (department_id.webStatus === 'Error') {
+        return errorAgent;
+    }
+
     const res = await db_connect.query(`SELECT id FROM department_priorities WHERE department_id = ${department_id.department_id} AND status = 43 AND name = '${priority}' ORDER BY name ASC`);
-    return res.rows[0].id;
+    return res.rows.length === 0 ? errorPriority : res.rows[0].id;
 }
 
-function parseMarket(market) {
+async function parseMarket(market) {
     const marketMap = {
         'General': 75,
         'India': 68,
@@ -19,7 +34,13 @@ function parseMarket(market) {
         'Vietnam': 17
     };
 
-    return marketMap.hasOwnProperty(market) ? marketMap[market] : null;
+    const errorMarket = {
+        webStatus: 'Error',
+        message: 'Error on Market cell',
+        columnName: 'market'
+    }
+
+    return marketMap.hasOwnProperty(market) ? marketMap[market] : errorMarket;
 
 }
 
@@ -63,6 +84,12 @@ function parseBrand(brand) {
 
 
 function parseCatGroupID(status) {
+    const errorIssue = {
+        webStatus: 'Error',
+        message: 'Error on Issue cell',
+        columnName: 'issue'
+    };
+
     const mappings = [
         { substring: 'Acct', value: 1 },
         { substring: 'AFF', value: 2 },
@@ -76,36 +103,81 @@ function parseCatGroupID(status) {
 
     for (const mapping of mappings) {
         if (status.includes(mapping.substring)) {
-            return status.includes(mapping.substring) ? mapping.value : null;
+            return mapping.value;
         }
     }
-
+ 
+    return errorIssue;
 }
 
 async function parseDepartmentStatus(status) {
     const cat_group_id = parseCatGroupID(status);
+
+    if (cat_group_id.webStatus === 'Error') {
+        return cat_group_id;
+    }
     const res = await db_connect.query(`select id from department_statuses where cat_group_id = ${cat_group_id} and status_name = 'Pending';`);
     return res.rows[0].id;
 }
 
 async function parseUserID(username) {
+    const response = {
+        webStatus: 'Error',
+        message: 'Error on Agent cell',
+        columnName: 'agent'
+    }
     const res = await db_connect.query(`select id,department_id from users where username = '${username}'`);
-    return res.rows[0];
+    return res.rows.length === 0 ? response : res.rows[0];
 }
 
 async function parseAssignee(assignee) {
+    const errorAssignee = {
+        webStatus: 'Error',
+        message: 'Error on Assignee cell',
+        columnName: 'assignee'
+    }
     const res = await db_connect.query(`select id from roles where status = 1 and "name" = '${assignee}';`);
-    return res.rows[0].id;
+
+    return res.rows.length === 0 ? errorAssignee : res.rows[0].id;
 }
 
 async function parseCategories(issue, currency, channel) {
 
+    const errorIssue = {
+        webStatus: 'Error',
+        message: 'Error on Issue cell',
+        columnName: 'issue'
+    }
+    const errorCurrency = {
+        webStatus: 'Error',
+        message: 'Error on Currency cell',
+        columnName: 'currency'
+    }
+    const errorChannel = {
+        webStatus: 'Error',
+        message: 'Error on Channel cell',
+        columnName: 'channel'
+    }
+
     const cat_group_id = parseCatGroupID(issue);
+
+    if (cat_group_id.webStatus === 'Error') {
+        return cat_group_id;
+    }
     const issue_id = await db_connect.query(`select ci.id from category_items ci left join  category_holder ch ON ci.cat_holder_id = ch.id where ch.cat_group_id = ${cat_group_id} and ch.label = 'Issue' and ci.status = 43 and ci.name ilike '%${extractRelevantPart(issue)}%';`);
     const currency_id = await db_connect.query(`select ci.id from category_items ci left join  category_holder ch ON ci.cat_holder_id = ch.id where ch.cat_group_id = ${cat_group_id} and ch.label = 'Currency' and ci.status = 43 and ci.name = '${currency}';`);
     const channel_id = await db_connect.query(` select ci.id from category_items ci left join  category_holder ch ON ci.cat_holder_id = ch.id where ch.cat_group_id = ${cat_group_id} and ch.label = 'Channel' and ci.status = 43 and ci.name = '${channel}';`);
 
-    return `${issue_id.rows[0].id},${currency_id.rows[0].id},${channel_id.rows[0].id}`;
+    if (issue_id.rows.length === 0) {
+        return errorIssue
+    }
+    if (currency_id.rows.length === 0) {
+        return errorCurrency
+    }
+    if (channel_id.rows.length === 0) {
+        return errorChannel
+    }
+    return (currency && channel) ? `${issue_id.rows[0].id},${currency_id.rows[0].id},${channel_id.rows[0].id}` : false;
 
 }
 
