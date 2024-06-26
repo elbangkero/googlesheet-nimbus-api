@@ -78,7 +78,7 @@ uploadToNimbus = async (_req, _res) => {
         const dataRequest = JSON.parse(data);
         const nestedProperty = dataRequest[webStatus.location];
         nestedProperty.columnNo = csvColumns(nestedProperty.columnName);
-        console.log({ 'statusCode': 500, 'status': true, message: 'Error Request', 'callback': nestedProperty });
+        nestedProperty.rowNumber = _req.body.rowNumber;
         _res.status(200).json({ 'statusCode': 500, 'status': true, message: 'Error Request', 'callback': nestedProperty });
     }
 

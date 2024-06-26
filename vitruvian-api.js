@@ -18,8 +18,12 @@ async function vitruvianRequest(id) {
             : response.data.results[0].status.segment;
         return result;
     } catch (error) {
-        console.error('Error fetching data:', error);
-        throw error;
+        const errorToken = {
+            webStatus: 'Error',
+            message: 'Error on PlayerToken cell',
+            columnName: 'playerToken'
+        }
+        return errorToken;
     }
 }
 
