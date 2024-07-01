@@ -16,26 +16,26 @@ uploadToNimbus = async (_req, _res) => {
     const assignee = await HelperClass.parseAssignee(_req.body.assignee);
 
     let data = JSON.stringify({
-        "categories": categories, 
-        "userid": userid.id === undefined ? userid : userid.id, 
-        "description": `<p>${_req.body.forCMT}</p>`,  
-        "priority": priority,  
-        "status": status, 
-        "market": market,  
-        "playertoken": _req.body.playerToken,  
-        "subject": "undefined", 
-        "cat_group_id": HelperClass.parseCatGroupID(_req.body.issue), 
-        "assignee": assignee, 
-        "watchers": null, 
-        "brand": HelperClass.parseBrand(_req.body.brand),  
-        "due_date": null, 
-        "playerclassification": playerclassification, 
-        "department_id": userid.department_id, 
-        "email": null, 
-        "internal_note": null, 
-        "userid_to_tag": _req.body.playerToken, 
-        "payment_method": null, 
-        "cashier_id": null 
+        "categories": categories,
+        "userid": userid.id === undefined ? userid : userid.id,
+        "description": `<p>${_req.body.forCMT}</p>`,
+        "priority": priority,
+        "status": status,
+        "market": market,
+        "playertoken": checkPlayerToken(_req.body.playerToken),
+        "subject": "undefined",
+        "cat_group_id": HelperClass.parseCatGroupID(_req.body.issue),
+        "assignee": assignee,
+        "watchers": null,
+        "brand": HelperClass.parseBrand(_req.body.brand),
+        "due_date": null,
+        "playerclassification": playerclassification,
+        "department_id": userid.department_id,
+        "email": null,
+        "internal_note": null,
+        "userid_to_tag": checkPlayerToken(_req.body.playerToken),
+        "payment_method": null,
+        "cashier_id": null
     });
     const webStatus = checkWebStatus(data);
     console.log(data);
@@ -132,6 +132,19 @@ function checkWebStatus(obj) {
     return checkObject(obj);
 }
 
+
+function checkPlayerToken(playertoken) {
+
+    if (playertoken === '' || playertoken == undefined) {
+        const errorToken = {
+            webStatus: 'Error',
+            message: 'Error on PlayerToken cell',
+            columnName: 'playerToken'
+        }
+        return errorToken;
+    }
+    return playertoken;
+}
 
 
 module.exports = function (app) {
