@@ -106,7 +106,7 @@ function parseCatGroupID(status) {
             return mapping.value;
         }
     }
- 
+
     return errorIssue;
 }
 
@@ -164,7 +164,7 @@ async function parseCategories(issue, currency, channel) {
     if (cat_group_id.webStatus === 'Error') {
         return cat_group_id;
     }
-    const issue_id = await db_connect.query(`select ci.id from category_items ci left join  category_holder ch ON ci.cat_holder_id = ch.id where ch.cat_group_id = ${cat_group_id} and ch.label = 'Issue' and ci.status = 43 and ci.name ilike '%${extractRelevantPart(issue)}%';`);
+    const issue_id = await db_connect.query(`select ci.id from category_items ci left join  category_holder ch ON ci.cat_holder_id = ch.id where ch.cat_group_id = ${cat_group_id} and ch.label = 'Issue' and ci.status = 43 and ci.name ilike '%${extractRelevantPart(issue).trim()}%';`);
     const currency_id = await db_connect.query(`select ci.id from category_items ci left join  category_holder ch ON ci.cat_holder_id = ch.id where ch.cat_group_id = ${cat_group_id} and ch.label = 'Currency' and ci.status = 43 and ci.name = '${currency}';`);
     const channel_id = await db_connect.query(` select ci.id from category_items ci left join  category_holder ch ON ci.cat_holder_id = ch.id where ch.cat_group_id = ${cat_group_id} and ch.label = 'Channel' and ci.status = 43 and ci.name = '${channel}';`);
 
@@ -188,6 +188,30 @@ function extractRelevantPart(value) {
     return parts.length > 1 ? parts[1] : value;
 }
 
+async function parsePaymentMethod(payment_method, issue) {
+
+    const cat_group_id = parseCatGroupID(issue);
+
+    const errorPaymentMethod = {
+        webStatus: 'Error',
+        message: 'Error on Payment Method cell',
+        columnName: 'paymentMethod'
+    }
+
+    if (cat_group_id.webStatus === 'Error') {
+        return cat_group_id;
+    }
+
+    if (payment_method == '' || payment_method == undefined || payment_method == null) {
+        return null;
+    }
+    const payment_method_str = String(payment_method).trim();
+
+    const res = await db_connect.query(`SELECT id FROM payment_methods pm WHERE status = 43 AND category_id = ${cat_group_id} AND name = '${payment_method_str}';`);
+    return res.rows.length === 0 ? errorPaymentMethod : res.rows[0].id;
+}
+
+
 module.exports = function () {
     this.parsePriority = parsePriority;
     this.parseMarket = parseMarket;
@@ -197,6 +221,6 @@ module.exports = function () {
     this.parseUserID = parseUserID;
     this.parseAssignee = parseAssignee;
     this.parseCategories = parseCategories;
-
+    this.parsePaymentMethod = parsePaymentMethod;
 
 }

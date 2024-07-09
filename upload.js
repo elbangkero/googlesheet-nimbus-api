@@ -7,24 +7,25 @@ const _vitruvian = new vitruvian();
 
 uploadToNimbus = async (_req, _res) => {
 
-    const playerclassification = await _vitruvian.vitruvianRequest(_req.body.playerToken);
-    const userid = await HelperClass.parseUserID(_req.body.agent);
-    const priority = await HelperClass.parsePriority(_req.body.agent, _req.body.priority);
-    const categories = await HelperClass.parseCategories(_req.body.issue, _req.body.currency, _req.body.channel);
-    const status = await HelperClass.parseDepartmentStatus(_req.body.issue);
-    const market = await HelperClass.parseMarket(_req.body.market);
-    const assignee = await HelperClass.parseAssignee(_req.body.assignee);
+    const playerclassification = await _vitruvian.vitruvianRequest(String(_req.body.playerToken).trim());
+    const userid = await HelperClass.parseUserID(String(_req.body.agent).trim());
+    const priority = await HelperClass.parsePriority(String(_req.body.agent).trim(), String(_req.body.priority).trim());
+    const categories = await HelperClass.parseCategories(String(_req.body.issue).trim(), String(_req.body.currency).trim(), String(_req.body.channel).trim());
+    const status = await HelperClass.parseDepartmentStatus(String(_req.body.issue).trim());
+    const market = await HelperClass.parseMarket(String(_req.body.market).trim());
+    const assignee = await HelperClass.parseAssignee(String(_req.body.assignee).trim());
+    const payment_method = await HelperClass.parsePaymentMethod(String(_req.body.paymentMethod).trim(), String(_req.body.issue).trim());
 
     let data = JSON.stringify({
         "categories": categories,
         "userid": userid.id === undefined ? userid : userid.id,
-        "description": `<p>${_req.body.forCMT}</p>`,
+        "description": `<p>${_req.body.description}</p>`,
         "priority": priority,
         "status": status,
         "market": market,
-        "playertoken": checkPlayerToken(_req.body.playerToken),
+        "playertoken": checkPlayerToken(String(_req.body.playerToken).trim()),
         "subject": "undefined",
-        "cat_group_id": HelperClass.parseCatGroupID(_req.body.issue),
+        "cat_group_id": HelperClass.parseCatGroupID(String(_req.body.issue).trim()),
         "assignee": assignee,
         "watchers": null,
         "brand": HelperClass.parseBrand(_req.body.brand),
@@ -33,12 +34,12 @@ uploadToNimbus = async (_req, _res) => {
         "department_id": userid.department_id,
         "email": null,
         "internal_note": null,
-        "userid_to_tag": checkPlayerToken(_req.body.playerToken),
-        "payment_method": null,
-        "cashier_id": null
+        "userid_to_tag": checkPlayerToken(String(_req.body.playerToken).trim()),
+        "payment_method": payment_method,
+        "cashier_id": String(_req.body.cashierID).trim(),
     });
     const webStatus = checkWebStatus(data);
-    console.log(data);
+    //console.log(data);
 
 
 
@@ -91,14 +92,15 @@ function csvColumns(columnName) {
         'issue': 4,
         'agent': 5,
         'description': 6,
-        'forCMT': 7,
-        'status': 8,
-        'remark': 9,
-        'market': 10,
-        'priority': 11,
-        'currency': 12,
-        'channel': 13,
-        'assignee': 14,
+        'status': 7,
+        'remark': 8,
+        'market': 9,
+        'priority': 10,
+        'currency': 11,
+        'channel': 12,
+        'paymentMethod': 13,
+        'cashierID': 14,
+        'assignee': 15,
     };
 
     return columnMap.hasOwnProperty(columnName) ? columnMap[columnName] : null;
