@@ -15,13 +15,14 @@ uploadToNimbus = async (_req, _res) => {
     const market = await HelperClass.parseMarket(String(_req.body.market).trim());
     const assignee = await HelperClass.parseAssignee(String(_req.body.assignee).trim());
     const payment_method = await HelperClass.parsePaymentMethod(String(_req.body.paymentMethod).trim(), String(_req.body.issue).trim());
+    const ticket_status = await HelperClass.parseTicketStatus(String(_req.body.ticketStatus).trim(), String(_req.body.issue).trim());
 
     let data = JSON.stringify({
         "categories": categories,
         "userid": userid.id === undefined ? userid : userid.id,
         "description": `<p>${_req.body.description}</p>`,
         "priority": priority,
-        "status": status,
+        "status": ticket_status,
         "market": market,
         "playertoken": checkPlayerToken(String(_req.body.playerToken).trim()),
         "subject": "undefined",
@@ -39,7 +40,7 @@ uploadToNimbus = async (_req, _res) => {
         "cashier_id": String(_req.body.cashierID).trim(),
     });
     const webStatus = checkWebStatus(data);
-    //console.log(data);
+    console.log(data);
 
 
 
@@ -88,19 +89,18 @@ function csvColumns(columnName) {
     const columnMap = {
         'date': 1,
         'playerToken': 2,
-        'categoryGroup': 3,
-        'issue': 4,
-        'agent': 5,
-        'description': 6,
-        'status': 7,
-        'remark': 8,
-        'market': 9,
-        'priority': 10,
-        'currency': 11,
-        'channel': 12,
-        'paymentMethod': 13,
-        'cashierID': 14,
-        'assignee': 15,
+        'issue': 3,
+        'agent': 4,
+        'description': 5,
+        'remark': 6,
+        'market': 7,
+        'priority': 8,
+        'currency': 9,
+        'channel': 10,
+        'paymentMethod': 11,
+        'cashierID': 12,
+        'assignee': 13,
+        'ticketStatus': 14
     };
 
     return columnMap.hasOwnProperty(columnName) ? columnMap[columnName] : null;

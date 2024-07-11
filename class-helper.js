@@ -211,6 +211,35 @@ async function parsePaymentMethod(payment_method, issue) {
     return res.rows.length === 0 ? errorPaymentMethod : res.rows[0].id;
 }
 
+async function parseTicketStatus(ticket_status, issue) {
+
+    const errorTicketStatus = {
+        webStatus: 'Error',
+        message: 'Error on Ticket Status cell',
+        columnName: 'ticketStatus'
+    }
+
+    const cat_group_id = parseCatGroupID(issue);
+
+    if (cat_group_id.webStatus === 'Error') {
+        return cat_group_id;
+    }
+
+    const status = capitalizeFirstLetter(ticket_status);
+    const res = await db_connect.query(`SELECT id FROM department_statuses WHERE cat_group_id = ${cat_group_id} AND status_name = '${status}';`);
+
+    return res.rows.length === 0 ? errorTicketStatus : res.rows[0].id;
+
+}
+
+
+function capitalizeFirstLetter(string) {
+    if (string.length === 0) {
+        return string;
+    }
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 
 module.exports = function () {
     this.parsePriority = parsePriority;
@@ -222,5 +251,7 @@ module.exports = function () {
     this.parseAssignee = parseAssignee;
     this.parseCategories = parseCategories;
     this.parsePaymentMethod = parsePaymentMethod;
+    this.parseTicketStatus = parseTicketStatus;
+
 
 }
